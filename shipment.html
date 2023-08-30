@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shipment Management Form</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="http://login2explore.com/jpdb/resources/js/0.0.3/jpdb-commons.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Shipment Management Form</h2>
+    <form id="shipmentForm">
+      <div class="form-group">
+        <label for="shipmentNo">Shipment No:</label>
+        <input type="text" class="form-control" id="shipmentNo" placeholder="Enter Shipment No">
+      </div>
+      <div class="form-group">
+        <label for="description">Description:</label>
+        <input type="text" class="form-control" id="description" placeholder="Enter Description" >
+      </div>
+      <div class="form-group">
+        <label for="source">Source:</label>
+        <input type="text" class="form-control" id="source" placeholder="Enter Source" >
+      </div>
+      <div class="form-group">
+        <label for="destination">Destination:</label>
+        <input type="text" class="form-control" id="destination" placeholder="Enter Destination" >
+      </div>
+      <div class="form-group">
+        <label for="shippingDate">Shipping Date:</label>
+        <input type="date" class="form-control" id="shippingDate" >
+      </div>
+      <div class="form-group">
+        <label for="expectedDeliveryDate">Expected Delivery Date:</label>
+        <input type="date" class="form-control" id="expectedDeliveryDate" >
+      </div>
+      <button type="button" class="btn btn-primary" id="saveBtn" >Save</button>
+      <button type="button" class="btn btn-primary" id="updateBtn">Update</button>
+      <button type="button" class="btn btn-default" id="resetBtn" >Reset</button>
+    </form>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      $("#shipmentNo").focus();
+
+      function disableFieldsAndButtons() {
+        $("#shipmentForm input[type='text']").not("#shipmentNo").prop("disabled", true);
+        $("#saveBtn, #updateBtn, #resetBtn").prop("disabled", true);
+      }
+
+      function enableSaveResetButtons() {
+        $("#saveBtn, #resetBtn").prop("disabled", false);
+      }
+
+      function enableUpdateResetButtons() {
+        $("#updateBtn, #resetBtn").prop("disabled", false);
+      }
+
+      function resetForm() {
+        $("#shipmentForm input[type='text']").val("");
+        $("#shipmentNo").focus();
+      }
+
+      function validateFormData() {
+        var shipmentNo = $("#shipmentNo").val();
+        var description = $("#description").val();
+        var source = $("#source").val();
+        var destination = $("#destination").val();
+        var shippingDate = $("#shippingDate").val();
+        var expectedDeliveryDate = $("#expectedDeliveryDate").val();
+
+        if (shipmentNo === "" || description === "" || source === "" || destination === "" || shippingDate === "" || expectedDeliveryDate === "") {
+          alert("All fields are required!");
+          return false;
+        }
+
+        return true;
+      }
+
+      function saveShipmentData() {
+        var shipmentNo = $("#shipmentNo").val();
+        var description = $("#description").val();
+        var source = $("#source").val();
+        var destination = $("#destination").val();
+        var shippingDate = $("#shippingDate").val();
+        var expectedDeliveryDate = $("#expectedDeliveryDate").val();
+
+        var jsonData = {
+          "Shipment-No.": shipmentNo,
+          "Description": description,
+          "Source": source,
+          "Destination": destination,
+          "Shipping-Date": shippingDate,
+          "Expected-Delivery-Date": expectedDeliveryDate
+        };
+
+        var putRequest = createPUTRequest("90931257|-31949329445394331|90960958", JSON.stringify(jsonData), "DELIVERY-DB", "SHIPMENT-TABLE");
+
+        var resultObj = executeCommandAtGivenBaseUrl(putRequest, "http://api.login2explore.com:5577", "/api/iml");
+        alert(JSON.stringify(resultObj));
+      }
+
+      function checkShipmentNoExists() {
+        var shipmentNo = $("#shipmentNo").val();
+
+        var getRequest = createGETRequest("90931257|-31949329445394331|90960958", "DELIVERY-DB", "SHIPMENT-TABLE", { "Shipment-No.": shipmentNo });
+
+        var resultObj = executeCommandAtGivenBaseUrl(getRequest, "http://api.login2explore.com:5577", "/api/iml");
+
+        if (resultObj && resultObj.data && resultObj.data.length > 0) {
+          enableUpdateResetButtons();
+          $("#description").val(resultObj.data[0]["Description"]).prop("disabled", false).focus();
+          $("#source").val(resultObj.data[0]["Source"]).prop("disabled", false);
+          $("#destination").val(resultObj.data[0]["Destination"]).prop("disabled", false);
+          $("#shippingDate").val(resultObj.data[0]["Shipping-Date"]).prop("disabled", false);
+          $("#expectedDeliveryDate").val(resultObj.data[0]["Expected-Delivery-Date"]).prop("disabled", false);
+        } else {
+          enableSaveResetButtons();
+          $("#description").prop("disabled", false).focus();
+          $("#source").prop("disabled", false);
+          $("#destination").prop("disabled", false);
+          $("#shippingDate").prop("disabled", false);
+          $("#expectedDeliveryDate").prop("disabled", false);
+        }
+      }
+
+      $("#shipmentNo").on("blur", function () {
+        checkShipmentNoExists();
+      });
+
+      $("#saveBtn").on("click", function () {
+        if (validateFormData()) {
+          saveShipmentData();
+          resetForm();
+          disableFieldsAndButtons();
+        }
+      });
+
+      $("#updateBtn").on("click", function () {
+        if (validateFormData()) {
+          saveShipmentData();
+          resetForm();
+          disableFieldsAndButtons();
+        }
+      });
+
+      $("#resetBtn").on("click", function () {
+        resetForm();
+        disableFieldsAndButtons();
+      });
+
+      disableFieldsAndButtons();
+    });
+  </script>
+</body>
+
+</html>
